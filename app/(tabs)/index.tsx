@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { user_books, books, categories } from '@/db/schema';
@@ -16,21 +16,30 @@ export default function BooksScreen() {
   const router = useRouter();
   const [rows, setRows] = useState<BookRow[]>([]);
 
-  useEffect(() => {
-    (async () => {
-      const result = await db
-        .select()
-        .from(user_books)
-        .innerJoin(books, eq(user_books.book_id, books.id))
-        .innerJoin(categories, eq(user_books.category_id, categories.id))
-        .where(eq(user_books.user_id, 1));
-      setRows(result as BookRow[]);
-    })();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        const result = await db
+          .select()
+          .from(user_books)
+          .innerJoin(books, eq(user_books.book_id, books.id))
+          .innerJoin(categories, eq(user_books.category_id, categories.id))
+          .where(eq(user_books.user_id, 1));
+        setRows(result as BookRow[]);
+      })();
+    }, [])
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.heading}>My Books</Text>
+
+      <Pressable
+        style={styles.addButton}
+        onPress={() => router.push('/book/add')}
+      >
+        <Text style={styles.addText}>+ Add Book</Text>
+      </Pressable>
 
       {rows.length === 0 ? (
         <Text style={styles.empty}>No books yet. Add your first book to get started.</Text>
@@ -62,6 +71,8 @@ export default function BooksScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16 },
+  addButton: { backgroundColor: '#457B9D', padding: 12, borderRadius: 8, marginBottom: 16, alignItems: 'center' },
+  addText: { color: '#fff', fontWeight: '600' },
   empty: { textAlign: 'center', marginTop: 40, color: '#666' },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
   pressed: { opacity: 0.6 },
