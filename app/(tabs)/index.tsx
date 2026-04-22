@@ -1,98 +1,74 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { eq } from 'drizzle-orm';
+import { db } from '@/db/client';
+import { user_books, books, categories } from '@/db/schema';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+type BookRow = {
+  user_books: { id: number; user_id: number; book_id: number; category_id: number };
+  books: { id: number; title: string; author: string; total_pages: number; isbn: string | null };
+  categories: { id: number; name: string; colour: string; icon: string };
+};
 
-export default function HomeScreen() {
+export default function BooksScreen() {
+  const router = useRouter();
+  const [rows, setRows] = useState<BookRow[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const result = await db
+        .select()
+        .from(user_books)
+        .innerJoin(books, eq(user_books.book_id, books.id))
+        .innerJoin(categories, eq(user_books.category_id, categories.id))
+        .where(eq(user_books.user_id, 1));
+      setRows(result as BookRow[]);
+    })();
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.heading}>My Books</Text>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      {rows.length === 0 ? (
+        <Text style={styles.empty}>No books yet. Add your first book to get started.</Text>
+      ) : (
+        <FlatList
+          data={rows}
+          keyExtractor={(item) => item.user_books.id.toString()}
+          renderItem={({ item }) => (
+            <Pressable
+              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              onPress={() => router.push(`/book/${item.user_books.id}`)}
+            >
+              <View style={[styles.badge, { backgroundColor: item.categories.colour }]}>
+                <Text style={styles.badgeText}>{item.categories.icon}</Text>
+              </View>
+              <View style={styles.info}>
+                <Text style={styles.title}>{item.books.title}</Text>
+                <Text style={styles.author}>{item.books.author}</Text>
+                <Text style={styles.category}>{item.categories.name}</Text>
+              </View>
+            </Pressable>
+          )}
+        />
+      )}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  container: { flex: 1, padding: 16 },
+  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16 },
+  empty: { textAlign: 'center', marginTop: 40, color: '#666' },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  pressed: { opacity: 0.6 },
+  badge: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  badgeText: { fontSize: 20 },
+  info: { flex: 1 },
+  title: { fontSize: 16, fontWeight: '600' },
+  author: { fontSize: 14, color: '#666', marginTop: 2 },
+  category: { fontSize: 12, color: '#999', marginTop: 2 },
 });
