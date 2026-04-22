@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { eq, desc } from 'drizzle-orm';
@@ -36,6 +36,26 @@ export default function BookDetailScreen() {
     })();
   }, [id]);
 
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Book',
+      'This will remove the book from your list and all its reading logs. Are you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const userBookId = Number(id);
+            await db.delete(reading_logs).where(eq(reading_logs.user_book_id, userBookId));
+            await db.delete(user_books).where(eq(user_books.id, userBookId));
+            router.back();
+          },
+        },
+      ]
+    );
+  };
+
   if (!book) {
     return (
       <SafeAreaView style={styles.container}>
@@ -61,6 +81,15 @@ export default function BookDetailScreen() {
       <Text style={styles.progress}>
         {totalRead} / {book.books.total_pages} pages ({percent}%)
       </Text>
+
+      <View style={styles.actions}>
+        <Pressable style={styles.editButton} onPress={() => router.push(`/book/${id}/edit`)}>
+          <Text style={styles.editText}>Edit</Text>
+        </Pressable>
+        <Pressable style={styles.deleteButton} onPress={handleDelete}>
+          <Text style={styles.deleteText}>Delete</Text>
+        </Pressable>
+      </View>
 
       <Text style={styles.heading}>Reading History</Text>
 
@@ -89,7 +118,12 @@ const styles = StyleSheet.create({
   author: { fontSize: 16, color: '#666', marginBottom: 12 },
   badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginBottom: 16 },
   badgeText: { color: '#fff', fontWeight: '600' },
-  progress: { fontSize: 16, marginBottom: 20 },
+  progress: { fontSize: 16, marginBottom: 16 },
+  actions: { flexDirection: 'row', gap: 8, marginBottom: 20 },
+  editButton: { flex: 1, backgroundColor: '#457B9D', padding: 12, borderRadius: 8, alignItems: 'center' },
+  editText: { color: '#fff', fontWeight: '600' },
+  deleteButton: { flex: 1, backgroundColor: '#E63946', padding: 12, borderRadius: 8, alignItems: 'center' },
+  deleteText: { color: '#fff', fontWeight: '600' },
   heading: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
   empty: { color: '#666', marginTop: 12 },
   row: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
