@@ -1,5 +1,6 @@
 import { db } from './client';
 import { users, categories, books, user_books, reading_logs, targets } from './schema';
+import { hashPassword } from '../lib/auth';
 
 export async function seedDatabaseIfEmpty() {
   const existing = await db.select().from(users);
@@ -8,7 +9,7 @@ export async function seedDatabaseIfEmpty() {
   // 1. User
   const [demoUser] = await db.insert(users).values({
     username: 'demo',
-    password_hash: 'seeded_hash_placeholder',
+    password_hash: await hashPassword('demo'),
   }).returning();
 
   // 2. Categories

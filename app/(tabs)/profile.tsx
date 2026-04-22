@@ -1,9 +1,69 @@
-import { StyleSheet, Text, View, Pressable, ScrollView } from 'react-native';
+import { useContext, useEffect, useState } from 'react';
+import { Alert, StyleSheet, Text, View, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { eq } from 'drizzle-orm';
+
+import { AppContext } from '../_layout';
+import { db } from '@/db/client';
+import { users, categories, user_books, reading_logs, targets } from '@/db/schema';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { currentUserId, logout } = useContext(AppContext);
+  const [username, setUsername] = useState<string>('');
+
+  useEffect(() => {
+    (async () => {
+      if (currentUserId === null) return;
+      const [user] = await db.select().from(users).where(eq(users.id, currentUserId));
+      if (user) setUsername(user.username);
+    })();
+  }, [currentUserId]);
+
+  const handleLogout = () => {
+    Alert.alert('Log Out', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Log Out',
+        onPress: async () => {
+          await logout();
+        },
+      },
+    ]);
+  };
+
+  const handleDeleteProfile = () => {
+    Alert.alert(
+      'Delete Profile',
+      'This will permanently delete your account and all your reading data. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            if (currentUserId === null) return;
+            try {
+              // Delete all user data in dependency order
+              const userBookRows = await db.select().from(user_books).where(eq(user_books.user_id, currentUserId));
+              for (const ub of userBookRows) {
+                await db.delete(reading_logs).where(eq(reading_logs.user_book_id, ub.id));
+              }
+              await db.delete(user_books).where(eq(user_books.user_id, currentUserId));
+              await db.delete(targets).where(eq(targets.user_id, currentUserId));
+              await db.delete(categories).where(eq(categories.user_id, currentUserId));
+              await db.delete(users).where(eq(users.id, currentUserId));
+
+              await logout();
+            } catch (e: any) {
+              Alert.alert('Error', e.message ?? 'Could not delete profile.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -11,7 +71,7 @@ export default function ProfileScreen() {
         <Text style={styles.heading} accessibilityRole="header">Profile</Text>
 
         <View style={styles.userCard}>
-          <Text style={styles.username}>demo</Text>
+          <Text style={styles.username}>{username || '...'}</Text>
           <Text style={styles.userMeta}>Signed in</Text>
         </View>
 
@@ -43,6 +103,7 @@ export default function ProfileScreen() {
           accessibilityLabel="Log out"
           accessibilityRole="button"
           style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+          onPress={handleLogout}
         >
           <Text style={styles.rowLabel}>Log out</Text>
         </Pressable>
@@ -51,6 +112,7 @@ export default function ProfileScreen() {
           accessibilityLabel="Delete profile"
           accessibilityRole="button"
           style={({ pressed }) => [styles.row, styles.danger, pressed && styles.pressed]}
+          onPress={handleDeleteProfile}
         >
           <Text style={[styles.rowLabel, styles.dangerText]}>Delete profile</Text>
         </Pressable>

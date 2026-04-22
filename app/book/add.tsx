@@ -21,6 +21,8 @@ export default function AddBookScreen() {
   const [categoryId, setCategoryId] = useState<number | null>(null);
 
   const handleSave = async () => {
+    console.log('values:', { title, author, totalPages, isbn, categoryId });
+
     if (!title.trim() || !author.trim() || !totalPages.trim() || !categoryId) {
       Alert.alert('Missing info', 'Please fill in title, author, pages, and category.');
       return;
