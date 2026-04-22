@@ -5,6 +5,7 @@ export default {
   out: './drizzle',
   dialect: 'sqlite',
   dbCredentials: {
-    url: './tasks.db',
+    url: './reading_tracker.db',
   },
 } satisfies Config;
+
