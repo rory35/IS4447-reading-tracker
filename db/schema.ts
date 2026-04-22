@@ -39,7 +39,8 @@ export const reading_logs = sqliteTable('reading_logs',{
     date: text('date').notNull(),
     pages_read: integer('pages_read').notNull(),
     notes: text('notes'),
-    })
+    created_at: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+});
 
 export const targets = sqliteTable('targets',{
     id: integer('id').primaryKey({ autoIncrement: true}),

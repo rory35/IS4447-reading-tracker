@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { user_books, books, categories, reading_logs } from '@/db/schema';
@@ -13,28 +13,30 @@ export default function BookDetailScreen() {
   const [book, setBook] = useState<any>(null);
   const [logs, setLogs] = useState<any[]>([]);
 
-  useEffect(() => {
-    (async () => {
-      const userBookId = Number(id);
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        const userBookId = Number(id);
 
-      const [bookRow] = await db
-        .select()
-        .from(user_books)
-        .innerJoin(books, eq(user_books.book_id, books.id))
-        .innerJoin(categories, eq(user_books.category_id, categories.id))
-        .where(eq(user_books.id, userBookId));
+        const [bookRow] = await db
+          .select()
+          .from(user_books)
+          .innerJoin(books, eq(user_books.book_id, books.id))
+          .innerJoin(categories, eq(user_books.category_id, categories.id))
+          .where(eq(user_books.id, userBookId));
 
-      setBook(bookRow);
+        setBook(bookRow);
 
-      const logRows = await db
-        .select()
-        .from(reading_logs)
-        .where(eq(reading_logs.user_book_id, userBookId))
-        .orderBy(desc(reading_logs.date));
+        const logRows = await db
+          .select()
+          .from(reading_logs)
+          .where(eq(reading_logs.user_book_id, userBookId))
+          .orderBy(desc(reading_logs.date), desc(reading_logs.created_at));
 
-      setLogs(logRows);
-    })();
-  }, [id]);
+        setLogs(logRows);
+      })();
+    }, [id])
+  );
 
   const handleDelete = () => {
     Alert.alert(
@@ -82,6 +84,10 @@ export default function BookDetailScreen() {
         {totalRead} / {book.books.total_pages} pages ({percent}%)
       </Text>
 
+      <Pressable style={styles.logButton} onPress={() => router.push(`/book/${id}/log`)}>
+        <Text style={styles.logText}>+ Log Reading</Text>
+      </Pressable>
+
       <View style={styles.actions}>
         <Pressable style={styles.editButton} onPress={() => router.push(`/book/${id}/edit`)}>
           <Text style={styles.editText}>Edit</Text>
@@ -118,7 +124,9 @@ const styles = StyleSheet.create({
   author: { fontSize: 16, color: '#666', marginBottom: 12 },
   badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginBottom: 16 },
   badgeText: { color: '#fff', fontWeight: '600' },
-  progress: { fontSize: 16, marginBottom: 16 },
+  progress: { fontSize: 16, marginBottom: 12 },
+  logButton: { backgroundColor: '#2A9D8F', padding: 12, borderRadius: 8, alignItems: 'center', marginBottom: 12 },
+  logText: { color: '#fff', fontWeight: '600' },
   actions: { flexDirection: 'row', gap: 8, marginBottom: 20 },
   editButton: { flex: 1, backgroundColor: '#457B9D', padding: 12, borderRadius: 8, alignItems: 'center' },
   editText: { color: '#fff', fontWeight: '600' },

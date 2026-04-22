@@ -48,7 +48,8 @@ sqlite.execSync(`
     user_book_id INTEGER NOT NULL REFERENCES user_books(id),
     date TEXT NOT NULL,
     pages_read INTEGER NOT NULL,
-    notes TEXT
+    notes TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS targets (
