@@ -1,9 +1,13 @@
-import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useContext, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+
+import { AppContext } from '../_layout';
 import { db } from '@/db/client';
 import { categories } from '@/db/schema';
+import FormField from '@/components/ui/form-field';
+import PrimaryButton from '@/components/ui/primary-button';
 
 const COLOUR_OPTIONS = [
   '#E63946', '#F4A261', '#E9C46A', '#2A9D8F',
@@ -14,6 +18,7 @@ const ICON_OPTIONS = ['📖', '📚', '🚀', '👤', '💡', '🎭', '🔬', '�
 
 export default function AddCategoryScreen() {
   const router = useRouter();
+  const { currentUserId, refreshCategories } = useContext(AppContext);
 
   const [name, setName] = useState('');
   const [colour, setColour] = useState(COLOUR_OPTIONS[0]);
@@ -30,8 +35,9 @@ export default function AddCategoryScreen() {
         name: name.trim(),
         colour,
         icon,
-        user_id: 1,
+        user_id: currentUserId,
       });
+      await refreshCategories();
       router.back();
     } catch (e: any) {
       Alert.alert('Error', e.message ?? 'Could not save category.');
@@ -41,11 +47,10 @@ export default function AddCategoryScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>Add Category</Text>
+        <Text style={styles.heading} accessibilityRole="header">Add Category</Text>
 
-        <Text style={styles.label}>Name</Text>
-        <TextInput
-          style={styles.input}
+        <FormField
+          label="Name"
           value={name}
           onChangeText={setName}
           placeholder="e.g. Mystery"
@@ -56,6 +61,8 @@ export default function AddCategoryScreen() {
           {COLOUR_OPTIONS.map((c) => (
             <Pressable
               key={c}
+              accessibilityLabel={`Colour ${c}`}
+              accessibilityRole="button"
               onPress={() => setColour(c)}
               style={[
                 styles.colourSwatch,
@@ -71,6 +78,8 @@ export default function AddCategoryScreen() {
           {ICON_OPTIONS.map((i) => (
             <Pressable
               key={i}
+              accessibilityLabel={`Icon ${i}`}
+              accessibilityRole="button"
               onPress={() => setIcon(i)}
               style={[
                 styles.iconOption,
@@ -87,13 +96,12 @@ export default function AddCategoryScreen() {
           <Text style={styles.previewText}>{icon} {name || 'Preview'}</Text>
         </View>
 
-        <Pressable style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveText}>Save Category</Text>
-        </Pressable>
-
-        <Pressable style={styles.cancelButton} onPress={() => router.back()}>
-          <Text style={styles.cancelText}>Cancel</Text>
-        </Pressable>
+        <View style={styles.buttonRow}>
+          <PrimaryButton label="Save Category" onPress={handleSave} />
+        </View>
+        <View style={styles.buttonRow}>
+          <PrimaryButton label="Cancel" variant="secondary" onPress={() => router.back()} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -104,7 +112,6 @@ const styles = StyleSheet.create({
   content: { padding: 16 },
   heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10, fontSize: 16 },
   optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   colourSwatch: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: 'transparent' },
   iconOption: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0f0f0', borderWidth: 2, borderColor: 'transparent' },
@@ -112,8 +119,5 @@ const styles = StyleSheet.create({
   selected: { borderColor: '#000' },
   preview: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, marginTop: 4 },
   previewText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-  saveButton: { backgroundColor: '#2A9D8F', padding: 14, borderRadius: 8, marginTop: 24, alignItems: 'center' },
-  saveText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  cancelButton: { padding: 14, alignItems: 'center', marginTop: 8 },
-  cancelText: { color: '#666' },
+  buttonRow: { marginTop: 12 },
 });

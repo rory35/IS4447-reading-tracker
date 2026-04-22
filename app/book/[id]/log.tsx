@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+
 import { db } from '@/db/client';
 import { reading_logs } from '@/db/schema';
+import FormField from '@/components/ui/form-field';
+import PrimaryButton from '@/components/ui/primary-button';
 
 export default function LogReadingScreen() {
   const { id } = useLocalSearchParams();
@@ -43,36 +46,38 @@ export default function LogReadingScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>Log Reading Session</Text>
+        <Text style={styles.heading} accessibilityRole="header">Log Reading Session</Text>
 
-        <Text style={styles.label}>Date (YYYY-MM-DD)</Text>
-        <TextInput style={styles.input} value={date} onChangeText={setDate} placeholder="2026-04-22" />
+        <FormField
+          label="Date (YYYY-MM-DD)"
+          value={date}
+          onChangeText={setDate}
+          placeholder="2026-04-22"
+        />
 
-        <Text style={styles.label}>Pages Read</Text>
-        <TextInput
-          style={styles.input}
+        <FormField
+          label="Pages Read"
           value={pagesRead}
           onChangeText={setPagesRead}
           placeholder="e.g. 30"
           keyboardType="number-pad"
         />
 
-        <Text style={styles.label}>Notes (optional)</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
+        <FormField
+          label="Notes (optional)"
           value={notes}
           onChangeText={setNotes}
           placeholder="How was it?"
           multiline
+          style={styles.textArea}
         />
 
-        <Pressable style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveText}>Save Log</Text>
-        </Pressable>
-
-        <Pressable style={styles.cancelButton} onPress={() => router.back()}>
-          <Text style={styles.cancelText}>Cancel</Text>
-        </Pressable>
+        <View style={styles.buttonRow}>
+          <PrimaryButton label="Save Log" onPress={handleSave} />
+        </View>
+        <View style={styles.buttonRow}>
+          <PrimaryButton label="Cancel" variant="secondary" onPress={() => router.back()} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -82,11 +87,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16 },
   heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10, fontSize: 16 },
   textArea: { minHeight: 80, textAlignVertical: 'top' },
-  saveButton: { backgroundColor: '#2A9D8F', padding: 14, borderRadius: 8, marginTop: 24, alignItems: 'center' },
-  saveText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  cancelButton: { padding: 14, alignItems: 'center', marginTop: 8 },
-  cancelText: { color: '#666' },
+  buttonRow: { marginTop: 12 },
 });

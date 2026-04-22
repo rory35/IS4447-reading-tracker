@@ -1,14 +1,18 @@
-import { useCallback, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useContext, useState } from 'react';
+import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { eq, desc } from 'drizzle-orm';
+
+import { AppContext } from '../_layout';
 import { db } from '@/db/client';
 import { user_books, books, categories, reading_logs } from '@/db/schema';
+import PrimaryButton from '@/components/ui/primary-button';
 
 export default function BookDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { refreshBooks } = useContext(AppContext);
 
   const [book, setBook] = useState<any>(null);
   const [logs, setLogs] = useState<any[]>([]);
@@ -51,6 +55,7 @@ export default function BookDetailScreen() {
             const userBookId = Number(id);
             await db.delete(reading_logs).where(eq(reading_logs.user_book_id, userBookId));
             await db.delete(user_books).where(eq(user_books.id, userBookId));
+            await refreshBooks();
             router.back();
           },
         },
@@ -71,10 +76,13 @@ export default function BookDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>{book.books.title}</Text>
+      <Text style={styles.title} accessibilityRole="header">{book.books.title}</Text>
       <Text style={styles.author}>{book.books.author}</Text>
 
-      <View style={[styles.badge, { backgroundColor: book.categories.colour }]}>
+      <View
+        style={[styles.badge, { backgroundColor: book.categories.colour }]}
+        accessibilityLabel={`Category ${book.categories.name}`}
+      >
         <Text style={styles.badgeText}>
           {book.categories.icon} {book.categories.name}
         </Text>
@@ -84,20 +92,20 @@ export default function BookDetailScreen() {
         {totalRead} / {book.books.total_pages} pages ({percent}%)
       </Text>
 
-      <Pressable style={styles.logButton} onPress={() => router.push(`/book/${id}/log`)}>
-        <Text style={styles.logText}>+ Log Reading</Text>
-      </Pressable>
-
-      <View style={styles.actions}>
-        <Pressable style={styles.editButton} onPress={() => router.push(`/book/${id}/edit`)}>
-          <Text style={styles.editText}>Edit</Text>
-        </Pressable>
-        <Pressable style={styles.deleteButton} onPress={handleDelete}>
-          <Text style={styles.deleteText}>Delete</Text>
-        </Pressable>
+      <View style={styles.row}>
+        <PrimaryButton label="+ Log Reading" onPress={() => router.push(`/book/${id}/log`)} />
       </View>
 
-      <Text style={styles.heading}>Reading History</Text>
+      <View style={styles.actions}>
+        <View style={styles.actionItem}>
+          <PrimaryButton label="Edit" variant="secondary" onPress={() => router.push(`/book/${id}/edit`)} />
+        </View>
+        <View style={styles.actionItem}>
+          <PrimaryButton label="Delete" variant="danger" onPress={handleDelete} />
+        </View>
+      </View>
+
+      <Text style={styles.heading} accessibilityRole="header">Reading History</Text>
 
       {logs.length === 0 ? (
         <Text style={styles.empty}>No sessions logged yet.</Text>
@@ -106,7 +114,7 @@ export default function BookDetailScreen() {
           data={logs}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={styles.row}>
+            <View style={styles.logRow}>
               <Text style={styles.date}>{item.date}</Text>
               <Text style={styles.pages}>{item.pages_read} pages</Text>
               {item.notes && <Text style={styles.notes}>{item.notes}</Text>}
@@ -125,16 +133,12 @@ const styles = StyleSheet.create({
   badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginBottom: 16 },
   badgeText: { color: '#fff', fontWeight: '600' },
   progress: { fontSize: 16, marginBottom: 12 },
-  logButton: { backgroundColor: '#2A9D8F', padding: 12, borderRadius: 8, alignItems: 'center', marginBottom: 12 },
-  logText: { color: '#fff', fontWeight: '600' },
+  row: { marginBottom: 12 },
   actions: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  editButton: { flex: 1, backgroundColor: '#457B9D', padding: 12, borderRadius: 8, alignItems: 'center' },
-  editText: { color: '#fff', fontWeight: '600' },
-  deleteButton: { flex: 1, backgroundColor: '#E63946', padding: 12, borderRadius: 8, alignItems: 'center' },
-  deleteText: { color: '#fff', fontWeight: '600' },
+  actionItem: { flex: 1 },
   heading: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
   empty: { color: '#666', marginTop: 12 },
-  row: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  logRow: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
   date: { fontWeight: '600' },
   pages: { color: '#444', marginTop: 2 },
   notes: { color: '#666', fontStyle: 'italic', marginTop: 2 },

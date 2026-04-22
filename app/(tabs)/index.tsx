@@ -1,67 +1,62 @@
-import { useCallback, useState } from 'react';
+import { useContext, useCallback } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { eq } from 'drizzle-orm';
-import { db } from '@/db/client';
-import { user_books, books, categories } from '@/db/schema';
 
-type BookRow = {
-  user_books: { id: number; user_id: number; book_id: number; category_id: number };
-  books: { id: number; title: string; author: string; total_pages: number; isbn: string | null };
-  categories: { id: number; name: string; colour: string; icon: string };
-};
+import { AppContext } from '../_layout';
+import PrimaryButton from '@/components/ui/primary-button';
 
 export default function BooksScreen() {
   const router = useRouter();
-  const [rows, setRows] = useState<BookRow[]>([]);
+  const { books, refreshBooks } = useContext(AppContext);
 
   useFocusEffect(
     useCallback(() => {
-      (async () => {
-        const result = await db
-          .select()
-          .from(user_books)
-          .innerJoin(books, eq(user_books.book_id, books.id))
-          .innerJoin(categories, eq(user_books.category_id, categories.id))
-          .where(eq(user_books.user_id, 1));
-        setRows(result as BookRow[]);
-      })();
+      refreshBooks();
     }, [])
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.heading}>My Books</Text>
-
-      <Pressable
-        style={styles.addButton}
-        onPress={() => router.push('/book/add')}
+      <Text
+        style={styles.heading}
+        accessibilityRole="header"
       >
-        <Text style={styles.addText}>+ Add Book</Text>
-      </Pressable>
+        My Books
+      </Text>
 
-      {rows.length === 0 ? (
+      <PrimaryButton
+        label="+ Add Book"
+        onPress={() => router.push('/book/add')}
+      />
+
+      {books.length === 0 ? (
         <Text style={styles.empty}>No books yet. Add your first book to get started.</Text>
       ) : (
         <FlatList
-          data={rows}
+          data={books}
           keyExtractor={(item) => item.user_books.id.toString()}
-          renderItem={({ item }) => (
-            <Pressable
-              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-              onPress={() => router.push(`/book/${item.user_books.id}`)}
-            >
-              <View style={[styles.badge, { backgroundColor: item.categories.colour }]}>
-                <Text style={styles.badgeText}>{item.categories.icon}</Text>
-              </View>
-              <View style={styles.info}>
-                <Text style={styles.title}>{item.books.title}</Text>
-                <Text style={styles.author}>{item.books.author}</Text>
-                <Text style={styles.category}>{item.categories.name}</Text>
-              </View>
-            </Pressable>
-          )}
+          style={styles.list}
+          renderItem={({ item }) => {
+            const summary = `${item.books.title} by ${item.books.author}, category ${item.categories.name}`;
+            return (
+              <Pressable
+                accessibilityLabel={`${summary}, view details`}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+                onPress={() => router.push(`/book/${item.user_books.id}`)}
+              >
+                <View style={[styles.badge, { backgroundColor: item.categories.colour }]}>
+                  <Text style={styles.badgeText}>{item.categories.icon}</Text>
+                </View>
+                <View style={styles.info}>
+                  <Text style={styles.title}>{item.books.title}</Text>
+                  <Text style={styles.author}>{item.books.author}</Text>
+                  <Text style={styles.category}>{item.categories.name}</Text>
+                </View>
+              </Pressable>
+            );
+          }}
         />
       )}
     </SafeAreaView>
@@ -71,8 +66,7 @@ export default function BooksScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16 },
-  addButton: { backgroundColor: '#457B9D', padding: 12, borderRadius: 8, marginBottom: 16, alignItems: 'center' },
-  addText: { color: '#fff', fontWeight: '600' },
+  list: { marginTop: 12 },
   empty: { textAlign: 'center', marginTop: 40, color: '#666' },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
   pressed: { opacity: 0.6 },

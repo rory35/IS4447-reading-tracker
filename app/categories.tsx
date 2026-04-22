@@ -1,51 +1,41 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useContext } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { eq } from 'drizzle-orm';
-import { db } from '@/db/client';
-import { categories } from '@/db/schema';
 
-type Category = {
-  id: number;
-  name: string;
-  colour: string;
-  icon: string;
-  user_id: number;
-};
+import { AppContext } from './_layout';
+import PrimaryButton from '@/components/ui/primary-button';
 
 export default function CategoriesScreen() {
   const router = useRouter();
-  const [rows, setRows] = useState<Category[]>([]);
+  const { categories, refreshCategories } = useContext(AppContext);
 
   useFocusEffect(
     useCallback(() => {
-      (async () => {
-        const result = await db.select().from(categories).where(eq(categories.user_id, 1));
-        setRows(result as Category[]);
-      })();
+      refreshCategories();
     }, [])
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.heading}>Categories</Text>
+      <Text style={styles.heading} accessibilityRole="header">Categories</Text>
 
-      <Pressable
-        style={styles.addButton}
+      <PrimaryButton
+        label="+ Add Category"
         onPress={() => router.push('/category/add')}
-      >
-        <Text style={styles.addText}>+ Add Category</Text>
-      </Pressable>
+      />
 
-      {rows.length === 0 ? (
+      {categories.length === 0 ? (
         <Text style={styles.empty}>No categories yet.</Text>
       ) : (
         <FlatList
-          data={rows}
+          data={categories}
           keyExtractor={(item) => item.id.toString()}
+          style={styles.list}
           renderItem={({ item }) => (
             <Pressable
+              accessibilityLabel={`Category ${item.name}, edit`}
+              accessibilityRole="button"
               style={({ pressed }) => [styles.row, pressed && styles.pressed]}
               onPress={() => router.push(`/category/${item.id}`)}
             >
@@ -65,8 +55,7 @@ export default function CategoriesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16 },
-  addButton: { backgroundColor: '#457B9D', padding: 12, borderRadius: 8, marginBottom: 16, alignItems: 'center' },
-  addText: { color: '#fff', fontWeight: '600' },
+  list: { marginTop: 12 },
   empty: { textAlign: 'center', marginTop: 40, color: '#666' },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
   pressed: { opacity: 0.6 },

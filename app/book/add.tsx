@@ -1,27 +1,24 @@
-import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useContext, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { eq } from 'drizzle-orm';
+
+import { AppContext } from '../_layout';
 import { db } from '@/db/client';
-import { books, user_books, categories } from '@/db/schema';
+import { books, user_books } from '@/db/schema';
+import FormField from '@/components/ui/form-field';
+import PrimaryButton from '@/components/ui/primary-button';
 
 export default function AddBookScreen() {
   const router = useRouter();
+  const { currentUserId, categories, refreshBooks } = useContext(AppContext);
 
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [totalPages, setTotalPages] = useState('');
   const [isbn, setIsbn] = useState('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [categoryList, setCategoryList] = useState<any[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      const rows = await db.select().from(categories).where(eq(categories.user_id, 1));
-      setCategoryList(rows);
-    })();
-  }, []);
 
   const handleSave = async () => {
     if (!title.trim() || !author.trim() || !totalPages.trim() || !categoryId) {
@@ -36,7 +33,6 @@ export default function AddBookScreen() {
     }
 
     try {
-      // Check if book already exists by ISBN
       let bookId: number;
       if (isbn.trim()) {
         const [existing] = await db.select().from(books).where(eq(books.isbn, isbn.trim()));
@@ -61,11 +57,12 @@ export default function AddBookScreen() {
       }
 
       await db.insert(user_books).values({
-        user_id: 1,
+        user_id: currentUserId,
         book_id: bookId,
         category_id: categoryId,
       });
 
+      await refreshBooks();
       router.back();
     } catch (e: any) {
       Alert.alert('Error', e.message ?? 'Could not save book.');
@@ -75,31 +72,31 @@ export default function AddBookScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>Add Book</Text>
+        <Text style={styles.heading} accessibilityRole="header">Add Book</Text>
 
-        <Text style={styles.label}>Title</Text>
-        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Book title" />
-
-        <Text style={styles.label}>Author</Text>
-        <TextInput style={styles.input} value={author} onChangeText={setAuthor} placeholder="Author" />
-
-        <Text style={styles.label}>Total Pages</Text>
-        <TextInput
-          style={styles.input}
+        <FormField label="Title" value={title} onChangeText={setTitle} placeholder="Book title" />
+        <FormField label="Author" value={author} onChangeText={setAuthor} placeholder="Author" />
+        <FormField
+          label="Total Pages"
           value={totalPages}
           onChangeText={setTotalPages}
           placeholder="e.g. 320"
           keyboardType="number-pad"
         />
-
-        <Text style={styles.label}>ISBN (optional)</Text>
-        <TextInput style={styles.input} value={isbn} onChangeText={setIsbn} placeholder="13-digit ISBN" />
+        <FormField
+          label="ISBN (optional)"
+          value={isbn}
+          onChangeText={setIsbn}
+          placeholder="13-digit ISBN"
+        />
 
         <Text style={styles.label}>Category</Text>
         <View style={styles.categoryRow}>
-          {categoryList.map((cat) => (
+          {categories.map((cat) => (
             <Pressable
               key={cat.id}
+              accessibilityLabel={`Category ${cat.name}`}
+              accessibilityRole="button"
               onPress={() => setCategoryId(cat.id)}
               style={[
                 styles.categoryChip,
@@ -114,13 +111,12 @@ export default function AddBookScreen() {
           ))}
         </View>
 
-        <Pressable style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveText}>Save Book</Text>
-        </Pressable>
-
-        <Pressable style={styles.cancelButton} onPress={() => router.back()}>
-          <Text style={styles.cancelText}>Cancel</Text>
-        </Pressable>
+        <View style={styles.buttonRow}>
+          <PrimaryButton label="Save Book" onPress={handleSave} />
+        </View>
+        <View style={styles.buttonRow}>
+          <PrimaryButton label="Cancel" variant="secondary" onPress={() => router.back()} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -131,13 +127,9 @@ const styles = StyleSheet.create({
   content: { padding: 16 },
   heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10, fontSize: 16 },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   categoryChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, opacity: 0.6 },
   categoryChipSelected: { opacity: 1, borderWidth: 2, borderColor: '#000' },
   categoryText: { color: '#fff', fontWeight: '600' },
-  saveButton: { backgroundColor: '#2A9D8F', padding: 14, borderRadius: 8, marginTop: 24, alignItems: 'center' },
-  saveText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  cancelButton: { padding: 14, alignItems: 'center', marginTop: 8 },
-  cancelText: { color: '#666' },
+  buttonRow: { marginTop: 12 },
 });
