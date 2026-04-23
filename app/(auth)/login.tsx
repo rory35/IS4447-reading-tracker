@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { eq } from 'drizzle-orm';
@@ -56,8 +56,16 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading} accessibilityRole="header">Log In</Text>
-        <Text style={styles.subheading}>Welcome back to your reading tracker.</Text>
+        <View style={styles.brand}>
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+            accessibilityLabel="Pagemark logo"
+          />
+          <Text style={styles.appName}>Pagemark</Text>
+          <Text style={styles.tagline}>Track what you read.</Text>
+        </View>
 
         <FormField
           label="Username"
@@ -101,9 +109,11 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.background },
-  content: { padding: 16 },
-  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 4, color: C.text },
-  subheading: { fontSize: 14, color: C.textMuted, marginBottom: 16 },
+  content: { padding: 16, paddingTop: 40 },
+  brand: { alignItems: 'center', marginBottom: 32 },
+  logo: { width: 140, height: 100, marginBottom: 12 },
+  appName: { fontSize: 32, fontWeight: 'bold', color: C.text },
+  tagline: { fontSize: 14, color: C.textMuted, marginTop: 4 },
   buttonRow: { marginTop: 12 },
   hint: { fontSize: 12, color: C.textMuted, marginTop: 24, textAlign: 'center' },
   bold: { fontWeight: '700', color: C.text },
