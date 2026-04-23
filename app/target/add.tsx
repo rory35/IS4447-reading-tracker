@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -8,17 +8,34 @@ import { db } from '@/db/client';
 import { targets } from '@/db/schema';
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
-import { Colors } from '@/constants/theme';
-
-const C = Colors.light;
+import { useTheme } from '@/hooks/use-theme';
 
 export default function AddTargetScreen() {
   const router = useRouter();
   const { currentUserId, categories } = useContext(AppContext);
+  const { C } = useTheme();
 
   const [period, setPeriod] = useState<'weekly' | 'monthly'>('weekly');
   const [pagesGoal, setPagesGoal] = useState('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: C.background },
+    content: { padding: 16 },
+    heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: C.text },
+    label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4, color: C.text },
+    row: { flexDirection: 'row', gap: 8 },
+    periodChip: { flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: C.surfaceAlt, alignItems: 'center' },
+    periodChipSelected: { backgroundColor: C.primary },
+    periodText: { fontSize: 14, fontWeight: '600', color: C.text },
+    periodTextSelected: { color: C.textOnPrimary },
+    categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+    categoryChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, opacity: 0.6 },
+    allChip: { backgroundColor: '#444' },
+    categoryChipSelected: { opacity: 1, borderWidth: 2, borderColor: C.text },
+    categoryText: { color: C.textOnPrimary, fontWeight: '600' },
+    buttonRow: { marginTop: 12 },
+  }), [C]);
 
   const isValid = pagesGoal.trim().length > 0 && !isNaN(parseInt(pagesGoal, 10)) && parseInt(pagesGoal, 10) > 0;
 
@@ -111,21 +128,3 @@ export default function AddTargetScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.background },
-  content: { padding: 16 },
-  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: C.text },
-  label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4, color: C.text },
-  row: { flexDirection: 'row', gap: 8 },
-  periodChip: { flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: C.surfaceAlt, alignItems: 'center' },
-  periodChipSelected: { backgroundColor: C.primary },
-  periodText: { fontSize: 14, fontWeight: '600', color: C.text },
-  periodTextSelected: { color: C.textOnPrimary },
-  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
-  categoryChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, opacity: 0.6 },
-  allChip: { backgroundColor: '#444' },
-  categoryChipSelected: { opacity: 1, borderWidth: 2, borderColor: C.text },
-  categoryText: { color: C.textOnPrimary, fontWeight: '600' },
-  buttonRow: { marginTop: 12 },
-});

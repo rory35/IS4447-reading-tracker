@@ -1,4 +1,4 @@
-import { useCallback, useContext, useState } from 'react';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -8,9 +8,7 @@ import { AppContext } from './_layout';
 import { db } from '@/db/client';
 import { targets, reading_logs, user_books } from '@/db/schema';
 import PrimaryButton from '@/components/ui/primary-button';
-import { Colors } from '@/constants/theme';
-
-const C = Colors.light;
+import { useTheme } from '@/hooks/use-theme';
 
 type TargetRow = {
   id: number;
@@ -25,7 +23,26 @@ type TargetRow = {
 export default function TargetsScreen() {
   const router = useRouter();
   const { currentUserId, categories } = useContext(AppContext);
+  const { C } = useTheme();
   const [rows, setRows] = useState<TargetRow[]>([]);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, padding: 16, backgroundColor: C.background },
+    heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
+    list: { marginTop: 12 },
+    empty: { textAlign: 'center', marginTop: 40, color: C.textMuted },
+    card: { backgroundColor: C.surface, padding: 14, borderRadius: 12, marginBottom: 10 },
+    pressed: { opacity: 0.7 },
+    cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+    cardTitle: { fontSize: 16, fontWeight: '600', color: C.text },
+    status: { fontSize: 12, fontWeight: '700' },
+    statusMet: { color: C.success },
+    statusUnmet: { color: C.textMuted },
+    progressText: { color: C.textMuted, marginBottom: 6 },
+    barBg: { height: 8, backgroundColor: C.border, borderRadius: 4, overflow: 'hidden' },
+    barFill: { height: 8, borderRadius: 4 },
+    remaining: { fontSize: 12, color: C.textMuted, marginTop: 6 },
+  }), [C]);
 
   useFocusEffect(
     useCallback(() => {
@@ -149,21 +166,3 @@ export default function TargetsScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: C.background },
-  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
-  list: { marginTop: 12 },
-  empty: { textAlign: 'center', marginTop: 40, color: C.textMuted },
-  card: { backgroundColor: C.surface, padding: 14, borderRadius: 12, marginBottom: 10 },
-  pressed: { opacity: 0.7 },
-  cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  cardTitle: { fontSize: 16, fontWeight: '600', color: C.text },
-  status: { fontSize: 12, fontWeight: '700' },
-  statusMet: { color: C.success },
-  statusUnmet: { color: C.textMuted },
-  progressText: { color: C.textMuted, marginBottom: 6 },
-  barBg: { height: 8, backgroundColor: C.border, borderRadius: 4, overflow: 'hidden' },
-  barFill: { height: 8, borderRadius: 4 },
-  remaining: { fontSize: 12, color: C.textMuted, marginTop: 6 },
-});

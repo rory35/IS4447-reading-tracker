@@ -5,16 +5,52 @@ import { useFocusEffect, useRouter } from 'expo-router';
 
 import { AppContext } from '../_layout';
 import PrimaryButton from '@/components/ui/primary-button';
-import { Colors } from '@/constants/theme';
-
-const C = Colors.light;
+import { useTheme } from '@/hooks/use-theme';
 
 export default function BooksScreen() {
   const router = useRouter();
   const { books, categories, refreshBooks } = useContext(AppContext);
+  const { C } = useTheme();
 
   const [search, setSearch] = useState('');
   const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, padding: 16, backgroundColor: C.background },
+    heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
+    search: {
+      borderWidth: 1,
+      borderColor: C.borderStrong,
+      borderRadius: 8,
+      padding: 10,
+      fontSize: 16,
+      marginTop: 12,
+      color: C.text,
+    },
+    filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+    filterChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, opacity: 0.55 },
+    allChip: { backgroundColor: '#444' },
+    filterChipSelected: { opacity: 1, borderWidth: 2, borderColor: C.text },
+    filterText: { color: C.textOnPrimary, fontWeight: '600', fontSize: 13 },
+    reset: { marginTop: 8, alignSelf: 'flex-start' },
+    resetText: { color: C.primary, fontWeight: '600' },
+    list: { marginTop: 12 },
+    empty: { textAlign: 'center', marginTop: 40, color: C.textMuted },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: C.border,
+    },
+    pressed: { opacity: 0.6 },
+    badge: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+    badgeText: { fontSize: 20 },
+    info: { flex: 1 },
+    title: { fontSize: 16, fontWeight: '600', color: C.text },
+    author: { fontSize: 14, color: C.textMuted, marginTop: 2 },
+    category: { fontSize: 12, color: C.textLight, marginTop: 2 },
+  }), [C]);
 
   useFocusEffect(
     useCallback(() => {
@@ -133,40 +169,3 @@ export default function BooksScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: C.background },
-  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
-  search: {
-    borderWidth: 1,
-    borderColor: C.borderStrong,
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    marginTop: 12,
-    color: C.text,
-  },
-  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
-  filterChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, opacity: 0.55 },
-  allChip: { backgroundColor: '#444' },
-  filterChipSelected: { opacity: 1, borderWidth: 2, borderColor: C.text },
-  filterText: { color: C.textOnPrimary, fontWeight: '600', fontSize: 13 },
-  reset: { marginTop: 8, alignSelf: 'flex-start' },
-  resetText: { color: C.primary, fontWeight: '600' },
-  list: { marginTop: 12 },
-  empty: { textAlign: 'center', marginTop: 40, color: C.textMuted },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: C.border,
-  },
-  pressed: { opacity: 0.6 },
-  badge: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  badgeText: { fontSize: 20 },
-  info: { flex: 1 },
-  title: { fontSize: 16, fontWeight: '600', color: C.text },
-  author: { fontSize: 14, color: C.textMuted, marginTop: 2 },
-  category: { fontSize: 12, color: C.textLight, marginTop: 2 },
-});

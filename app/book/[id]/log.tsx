@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,19 +7,26 @@ import { db } from '@/db/client';
 import { reading_logs } from '@/db/schema';
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
-import { Colors } from '@/constants/theme';
-
-const C = Colors.light;
+import { useTheme } from '@/hooks/use-theme';
 
 export default function LogReadingScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { C } = useTheme();
 
   const today = new Date().toISOString().split('T')[0];
 
   const [date, setDate] = useState(today);
   const [pagesRead, setPagesRead] = useState('');
   const [notes, setNotes] = useState('');
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: C.background },
+    content: { padding: 16 },
+    heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: C.text },
+    textArea: { minHeight: 80, textAlignVertical: 'top' },
+    buttonRow: { marginTop: 12 },
+  }), [C]);
 
   const handleSave = async () => {
     if (!date.trim() || !pagesRead.trim()) {
@@ -85,11 +92,3 @@ export default function LogReadingScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.background },
-  content: { padding: 16 },
-  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: C.text },
-  textArea: { minHeight: 80, textAlignVertical: 'top' },
-  buttonRow: { marginTop: 12 },
-});

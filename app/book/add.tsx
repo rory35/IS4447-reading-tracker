@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -9,19 +9,30 @@ import { db } from '@/db/client';
 import { books, user_books } from '@/db/schema';
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
-import { Colors } from '@/constants/theme';
-
-const C = Colors.light;
+import { useTheme } from '@/hooks/use-theme';
 
 export default function AddBookScreen() {
   const router = useRouter();
   const { currentUserId, categories, refreshBooks } = useContext(AppContext);
+  const { C } = useTheme();
 
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [totalPages, setTotalPages] = useState('');
   const [isbn, setIsbn] = useState('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: C.background },
+    content: { padding: 16 },
+    heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: C.text },
+    label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4, color: C.text },
+    categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+    categoryChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, opacity: 0.6 },
+    categoryChipSelected: { opacity: 1, borderWidth: 2, borderColor: C.text },
+    categoryText: { color: C.textOnPrimary, fontWeight: '600' },
+    buttonRow: { marginTop: 12 },
+  }), [C]);
 
   const handleSave = async () => {
     if (!title.trim() || !author.trim() || !totalPages.trim() || !categoryId) {
@@ -124,15 +135,3 @@ export default function AddBookScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.background },
-  content: { padding: 16 },
-  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: C.text },
-  label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4, color: C.text },
-  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
-  categoryChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, opacity: 0.6 },
-  categoryChipSelected: { opacity: 1, borderWidth: 2, borderColor: C.text },
-  categoryText: { color: C.textOnPrimary, fontWeight: '600' },
-  buttonRow: { marginTop: 12 },
-});

@@ -1,7 +1,6 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { Colors } from '@/constants/theme';
-
-const C = Colors.light;
+import { useTheme } from '@/hooks/use-theme';
 
 type Props = {
   label: string;
@@ -18,6 +17,55 @@ export default function PrimaryButton({
   variant = 'primary',
   disabled = false,
 }: Props) {
+  const { C } = useTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    button: {
+      alignItems: 'center',
+      backgroundColor: C.primary,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 11,
+    },
+    secondary: {
+      backgroundColor: C.surfaceAlt,
+      borderColor: C.borderStrong,
+      borderWidth: 1,
+    },
+    danger: {
+      backgroundColor: '#FEF2F2',
+      borderColor: '#FCA5A5',
+      borderWidth: 1,
+    },
+    compact: {
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    pressed: {
+      opacity: 0.85,
+    },
+    disabled: {
+      opacity: 0.4,
+    },
+    label: {
+      color: C.textOnPrimary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    secondaryLabel: {
+      color: C.text,
+    },
+    dangerLabel: {
+      color: '#991B1B',
+    },
+    compactLabel: {
+      fontSize: 14,
+    },
+    disabledLabel: {
+      color: C.disabled,
+    },
+  }), [C]);
+
   return (
     <Pressable
       accessibilityLabel={label}
@@ -48,50 +96,3 @@ export default function PrimaryButton({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    alignItems: 'center',
-    backgroundColor: C.primary,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-  },
-  secondary: {
-    backgroundColor: C.surfaceAlt,
-    borderColor: C.borderStrong,
-    borderWidth: 1,
-  },
-  danger: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FCA5A5',
-    borderWidth: 1,
-  },
-  compact: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  disabled: {
-    opacity: 0.4,
-  },
-  label: {
-    color: C.textOnPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryLabel: {
-    color: C.text,
-  },
-  dangerLabel: {
-    color: '#991B1B',
-  },
-  compactLabel: {
-    fontSize: 14,
-  },
-  disabledLabel: {
-    color: C.disabled,
-  },
-});

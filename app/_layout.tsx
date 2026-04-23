@@ -1,9 +1,10 @@
-import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { createContext, useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { eq } from 'drizzle-orm';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { seedDatabaseIfEmpty } from '../db/seed';
 import { db } from '@/db/client';
@@ -24,6 +25,8 @@ export type Category = {
   user_id: number;
 };
 
+export type ThemeMode = 'light' | 'dark';
+
 type AppContextType = {
   currentUserId: number | null;
   setCurrentUserId: (id: number | null) => void;
@@ -32,6 +35,8 @@ type AppContextType = {
   categories: Category[];
   refreshBooks: () => Promise<void>;
   refreshCategories: () => Promise<void>;
+  themeMode: ThemeMode;
+  toggleTheme: () => Promise<void>;
 };
 
 export const AppContext = createContext<AppContextType>({
@@ -42,11 +47,15 @@ export const AppContext = createContext<AppContextType>({
   categories: [],
   refreshBooks: async () => {},
   refreshCategories: async () => {},
+  themeMode: 'light',
+  toggleTheme: async () => {},
 });
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
+
+const THEME_KEY = 'themeMode';
 
 export default function RootLayout() {
   const router = useRouter();
@@ -56,6 +65,7 @@ export default function RootLayout() {
   const [bootstrapped, setBootstrapped] = useState(false);
   const [bookRows, setBookRows] = useState<BookRow[]>([]);
   const [categoryRows, setCategoryRows] = useState<Category[]>([]);
+  const [themeMode, setThemeMode] = useState<ThemeMode>('light');
 
   const refreshBooks = async () => {
     if (currentUserId === null) return;
@@ -84,11 +94,23 @@ export default function RootLayout() {
     setCategoryRows([]);
   };
 
+  const toggleTheme = async () => {
+    const next: ThemeMode = themeMode === 'light' ? 'dark' : 'light';
+    setThemeMode(next);
+    await AsyncStorage.setItem(THEME_KEY, next);
+  };
+
   useEffect(() => {
     (async () => {
       await seedDatabaseIfEmpty();
       const sessionUserId = await getSession();
       setCurrentUserId(sessionUserId);
+
+      const stored = await AsyncStorage.getItem(THEME_KEY);
+      if (stored === 'light' || stored === 'dark') {
+        setThemeMode(stored);
+      }
+
       setBootstrapped(true);
     })();
   }, []);
@@ -120,15 +142,17 @@ export default function RootLayout() {
         categories: categoryRows,
         refreshBooks,
         refreshCategories,
+        themeMode,
+        toggleTheme,
       }}
     >
-      <ThemeProvider value={DefaultTheme}>
+      <ThemeProvider value={themeMode === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
       </ThemeProvider>
     </AppContext.Provider>
   );

@@ -1,4 +1,4 @@
-import { useCallback, useContext, useState } from 'react';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import { Dimensions, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
@@ -8,19 +8,43 @@ import { eq, gte, and } from 'drizzle-orm';
 import { AppContext } from '../_layout';
 import { db } from '@/db/client';
 import { reading_logs, user_books, books, targets } from '@/db/schema';
-import { Colors } from '@/constants/theme';
-
-const C = Colors.light;
+import { useTheme } from '@/hooks/use-theme';
 
 type Period = 'week' | 'month' | 'year';
 
 export default function InsightsScreen() {
   const { currentUserId, categories } = useContext(AppContext);
+  const { C } = useTheme();
   const [period, setPeriod] = useState<Period>('week');
   const [logs, setLogs] = useState<any[]>([]);
   const [booksReadCount, setBooksReadCount] = useState(0);
   const [userTargets, setUserTargets] = useState<any[]>([]);
   const [targetProgress, setTargetProgress] = useState<Record<number, number>>({});
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: C.background },
+    content: { padding: 16 },
+    heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
+    periodRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+    periodChip: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: C.surfaceAlt, alignItems: 'center' },
+    periodChipSelected: { backgroundColor: C.primary },
+    periodText: { fontSize: 12, fontWeight: '600', color: C.text },
+    periodTextSelected: { color: C.textOnPrimary },
+    statsRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
+    statCard: { flex: 1, backgroundColor: C.surfaceAlt, padding: 10, borderRadius: 12, alignItems: 'center' },
+    statValue: { fontSize: 20, fontWeight: 'bold', color: C.primary },
+    statLabel: { fontSize: 11, color: C.textMuted, marginTop: 2, textAlign: 'center' },
+    sectionHeading: { fontSize: 18, fontWeight: '600', marginTop: 20, marginBottom: 8, color: C.text },
+    chart: { borderRadius: 12 },
+    empty: { textAlign: 'center', color: C.textMuted, padding: 20 },
+    targetCard: { backgroundColor: C.surface, padding: 14, borderRadius: 12, marginBottom: 10 },
+    targetHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+    targetTitle: { fontSize: 16, fontWeight: '600', color: C.text },
+    targetStatus: { fontSize: 12, fontWeight: '700' },
+    targetProgressText: { color: C.textMuted, marginBottom: 6, fontSize: 13 },
+    barBg: { height: 8, backgroundColor: C.border, borderRadius: 4, overflow: 'hidden' },
+    barFill: { height: 8, borderRadius: 4 },
+  }), [C]);
 
   useFocusEffect(
     useCallback(() => {
@@ -245,28 +269,3 @@ export default function InsightsScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.background },
-  content: { padding: 16 },
-  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
-  periodRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  periodChip: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: C.surfaceAlt, alignItems: 'center' },
-  periodChipSelected: { backgroundColor: C.primary },
-  periodText: { fontSize: 12, fontWeight: '600', color: C.text },
-  periodTextSelected: { color: C.textOnPrimary },
-  statsRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  statCard: { flex: 1, backgroundColor: C.surfaceAlt, padding: 10, borderRadius: 12, alignItems: 'center' },
-  statValue: { fontSize: 20, fontWeight: 'bold', color: C.primary },
-  statLabel: { fontSize: 11, color: C.textMuted, marginTop: 2, textAlign: 'center' },
-  sectionHeading: { fontSize: 18, fontWeight: '600', marginTop: 20, marginBottom: 8, color: C.text },
-  chart: { borderRadius: 12 },
-  empty: { textAlign: 'center', color: C.textMuted, padding: 20 },
-  targetCard: { backgroundColor: C.surface, padding: 14, borderRadius: 12, marginBottom: 10 },
-  targetHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  targetTitle: { fontSize: 16, fontWeight: '600', color: C.text },
-  targetStatus: { fontSize: 12, fontWeight: '700' },
-  targetProgressText: { color: C.textMuted, marginBottom: 6, fontSize: 13 },
-  barBg: { height: 8, backgroundColor: C.border, borderRadius: 4, overflow: 'hidden' },
-  barFill: { height: 8, borderRadius: 4 },
-});

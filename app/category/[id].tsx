@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,19 +9,44 @@ import { db } from '@/db/client';
 import { categories, user_books } from '@/db/schema';
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
-import { Colors, CategoryColours, CategoryIcons } from '@/constants/theme';
-
-const C = Colors.light;
+import { CategoryColours, CategoryIcons } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function EditCategoryScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { refreshCategories, refreshBooks } = useContext(AppContext);
+  const { C } = useTheme();
 
   const [name, setName] = useState('');
   const [colour, setColour] = useState(CategoryColours[0]);
   const [icon, setIcon] = useState(CategoryIcons[0]);
   const [loaded, setLoaded] = useState(false);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: C.background },
+    content: { padding: 16 },
+    loading: { color: C.textMuted, padding: 16 },
+    heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: C.text },
+    label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4, color: C.text },
+    optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+    colourSwatch: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: 'transparent' },
+    iconOption: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: C.surfaceAlt,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    iconText: { fontSize: 20 },
+    selected: { borderColor: C.text },
+    preview: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, marginTop: 4 },
+    previewText: { color: C.textOnPrimary, fontWeight: '600', fontSize: 16 },
+    buttonRow: { marginTop: 12 },
+  }), [C]);
 
   useEffect(() => {
     (async () => {
@@ -141,28 +166,3 @@ export default function EditCategoryScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.background },
-  content: { padding: 16 },
-  loading: { color: C.textMuted, padding: 16 },
-  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: C.text },
-  label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4, color: C.text },
-  optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
-  colourSwatch: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: 'transparent' },
-  iconOption: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: C.surfaceAlt,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  iconText: { fontSize: 20 },
-  selected: { borderColor: C.text },
-  preview: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, marginTop: 4 },
-  previewText: { color: C.textOnPrimary, fontWeight: '600', fontSize: 16 },
-  buttonRow: { marginTop: 12 },
-});

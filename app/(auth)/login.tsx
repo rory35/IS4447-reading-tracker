@@ -1,54 +1,74 @@
-import { useContext, useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useContext, useMemo, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { eq } from 'drizzle-orm';
 
 import { AppContext } from '../_layout';
 import { db } from '@/db/client';
-import { users } from '@/db/schema';
-import { verifyPassword, saveSession } from '../../lib/auth';
+import { users, categories } from '@/db/schema';
+import { hashPassword, saveSession } from '../../lib/auth';
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
-const C = Colors.light;
-
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const router = useRouter();
   const { setCurrentUserId } = useContext(AppContext);
+  const { C } = useTheme();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const isValid = username.trim().length > 0 && password.length > 0;
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: C.background },
+    content: { padding: 16 },
+    heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 4, color: C.text },
+    subheading: { fontSize: 14, color: C.textMuted, marginBottom: 16 },
+    buttonRow: { marginTop: 12 },
+    error: { color: C.danger, marginTop: 8, fontSize: 13 },
+  }), [C]);
 
-  const handleLogin = async () => {
+  const isValid =
+    username.trim().length >= 3 &&
+    password.length >= 4 &&
+    password === confirm;
+
+  const handleRegister = async () => {
     setSubmitting(true);
     try {
-      const [user] = await db
+      const trimmed = username.trim();
+
+      const [existing] = await db
         .select()
         .from(users)
-        .where(eq(users.username, username.trim()));
+        .where(eq(users.username, trimmed));
 
-      if (!user) {
-        Alert.alert('Login failed', 'No user found with that username.');
+      if (existing) {
+        Alert.alert('Username taken', 'Please choose a different username.');
         setSubmitting(false);
         return;
       }
 
-      const ok = await verifyPassword(password, user.password_hash);
-      if (!ok) {
-        Alert.alert('Login failed', 'Incorrect password.');
-        setSubmitting(false);
-        return;
-      }
+      const hash = await hashPassword(password);
+      const [newUser] = await db.insert(users).values({
+        username: trimmed,
+        password_hash: hash,
+      }).returning();
 
-      await saveSession(user.id);
-      setCurrentUserId(user.id);
+      await db.insert(categories).values([
+        { name: 'Fiction',     colour: '#E63946', icon: '📖', user_id: newUser.id },
+        { name: 'Non-Fiction', colour: '#2A9D8F', icon: '📚', user_id: newUser.id },
+        { name: 'Sci-Fi',      colour: '#457B9D', icon: '🚀', user_id: newUser.id },
+        { name: 'Biography',   colour: '#F4A261', icon: '👤', user_id: newUser.id },
+      ]);
+
+      await saveSession(newUser.id);
+      setCurrentUserId(newUser.id);
     } catch (e: any) {
-      Alert.alert('Error', e.message ?? 'Could not log in.');
+      Alert.alert('Error', e.message ?? 'Could not create account.');
       setSubmitting(false);
     }
   };
@@ -56,65 +76,53 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.brand}>
-          <Image
-            source={require('@/assets/images/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-            accessibilityLabel="Pagemark logo"
-          />
-          <Text style={styles.appName}>Pagemark</Text>
-          <Text style={styles.tagline}>Track what you read.</Text>
-        </View>
+        <Text style={styles.heading} accessibilityRole="header">Create Account</Text>
+        <Text style={styles.subheading}>Start tracking your reading.</Text>
 
         <FormField
-          label="Username"
+          label="Username (min 3 chars)"
           value={username}
           onChangeText={setUsername}
           autoCapitalize="none"
-          placeholder="demo"
+          placeholder="Your username"
         />
 
         <FormField
-          label="Password"
+          label="Password (min 4 chars)"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          placeholder="demo"
+          placeholder="Password"
         />
+
+        <FormField
+          label="Confirm Password"
+          value={confirm}
+          onChangeText={setConfirm}
+          secureTextEntry
+          placeholder="Confirm password"
+        />
+
+        {password.length > 0 && confirm.length > 0 && password !== confirm && (
+          <Text style={styles.error}>Passwords do not match.</Text>
+        )}
 
         <View style={styles.buttonRow}>
           <PrimaryButton
-            label={submitting ? 'Logging in...' : 'Log In'}
-            onPress={handleLogin}
+            label={submitting ? 'Creating...' : 'Create Account'}
+            onPress={handleRegister}
             disabled={!isValid || submitting}
           />
         </View>
 
         <View style={styles.buttonRow}>
           <PrimaryButton
-            label="Create Account"
+            label="Back to Login"
             variant="secondary"
-            onPress={() => router.push('/(auth)/register')}
+            onPress={() => router.back()}
           />
         </View>
-
-        <Text style={styles.hint}>
-          Demo user: username <Text style={styles.bold}>demo</Text>, password <Text style={styles.bold}>demo</Text>
-        </Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.background },
-  content: { padding: 16, paddingTop: 40 },
-  brand: { alignItems: 'center', marginBottom: 32 },
-  logo: { width: 140, height: 100, marginBottom: 12 },
-  appName: { fontSize: 32, fontWeight: 'bold', color: C.text },
-  tagline: { fontSize: 14, color: C.textMuted, marginTop: 4 },
-  buttonRow: { marginTop: 12 },
-  hint: { fontSize: 12, color: C.textMuted, marginTop: 24, textAlign: 'center' },
-  bold: { fontWeight: '700', color: C.text },
-});

@@ -1,5 +1,5 @@
-import { useContext, useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View, Pressable, ScrollView } from 'react-native';
+import { useContext, useEffect, useMemo, useState } from 'react';
+import { Alert, StyleSheet, Text, View, Pressable, ScrollView, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { eq } from 'drizzle-orm';
@@ -7,14 +7,43 @@ import { eq } from 'drizzle-orm';
 import { AppContext } from '../_layout';
 import { db } from '@/db/client';
 import { users, categories, user_books, reading_logs, targets } from '@/db/schema';
-import { Colors } from '@/constants/theme';
-
-const C = Colors.light;
+import { useTheme } from '@/hooks/use-theme';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { currentUserId, logout } = useContext(AppContext);
+  const { C, themeMode, toggleTheme } = useTheme();
   const [username, setUsername] = useState<string>('');
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: C.background },
+    content: { padding: 16 },
+    heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
+    userCard: { backgroundColor: C.surfaceAlt, padding: 16, borderRadius: 12, marginBottom: 24 },
+    username: { fontSize: 20, fontWeight: '600', color: C.text },
+    userMeta: { fontSize: 14, color: C.textMuted, marginTop: 2 },
+    sectionHeading: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: C.textMuted,
+      textTransform: 'uppercase',
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: C.border,
+    },
+    pressed: { opacity: 0.6 },
+    rowLabel: { fontSize: 16, color: C.text },
+    chevron: { fontSize: 20, color: C.textLight },
+    danger: { marginTop: 16 },
+    dangerText: { color: C.danger },
+  }), [C]);
 
   useEffect(() => {
     (async () => {
@@ -99,6 +128,17 @@ export default function ProfileScreen() {
           <Text style={styles.chevron}>›</Text>
         </Pressable>
 
+        <Text style={styles.sectionHeading} accessibilityRole="header">Appearance</Text>
+
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Dark mode</Text>
+          <Switch
+            accessibilityLabel="Toggle dark mode"
+            value={themeMode === 'dark'}
+            onValueChange={toggleTheme}
+          />
+        </View>
+
         <Text style={styles.sectionHeading} accessibilityRole="header">Account</Text>
 
         <Pressable
@@ -122,33 +162,3 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.background },
-  content: { padding: 16 },
-  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
-  userCard: { backgroundColor: C.surfaceAlt, padding: 16, borderRadius: 12, marginBottom: 24 },
-  username: { fontSize: 20, fontWeight: '600', color: C.text },
-  userMeta: { fontSize: 14, color: C.textMuted, marginTop: 2 },
-  sectionHeading: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: C.textMuted,
-    textTransform: 'uppercase',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: C.border,
-  },
-  pressed: { opacity: 0.6 },
-  rowLabel: { fontSize: 16, color: C.text },
-  chevron: { fontSize: 20, color: C.textLight },
-  danger: { marginTop: 16 },
-  dangerText: { color: C.danger },
-});
