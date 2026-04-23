@@ -150,6 +150,16 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="book/add" options={{ title: 'Add Book' }} />
+          <Stack.Screen name="book/[id]/index" options={{ title: 'Book Details' }} />
+          <Stack.Screen name="book/[id]/edit" options={{ title: 'Edit Book' }} />
+          <Stack.Screen name="book/[id]/log" options={{ title: 'Log Reading' }} />
+          <Stack.Screen name="categories" options={{ title: 'Categories' }} />
+          <Stack.Screen name="category/add" options={{ title: 'Add Category' }} />
+          <Stack.Screen name="category/[id]" options={{ title: 'Edit Category' }} />
+          <Stack.Screen name="targets" options={{ title: 'Targets' }} />
+          <Stack.Screen name="target/add" options={{ title: 'Add Target' }} />
+          <Stack.Screen name="target/[id]" options={{ title: 'Edit Target' }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />

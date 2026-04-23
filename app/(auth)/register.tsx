@@ -111,7 +111,7 @@ export default function RegisterScreen() {
           <PrimaryButton
             label="Back to Login"
             variant="secondary"
-            onPress={() => router.back()}
+            onPress={() => router.replace('/(auth)/login')}
           />
         </View>
       </ScrollView>
