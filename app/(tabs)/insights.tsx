@@ -20,6 +20,7 @@ export default function InsightsScreen() {
   const [booksReadCount, setBooksReadCount] = useState(0);
   const [userTargets, setUserTargets] = useState<any[]>([]);
   const [targetProgress, setTargetProgress] = useState<Record<number, number>>({});
+  const [currentStreak, setCurrentStreak] = useState(0);
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: C.background },
@@ -115,6 +116,43 @@ export default function InsightsScreen() {
           progress[t.id] = tLogs.reduce((sum: number, l: any) => sum + l.reading_logs.pages_read, 0);
         }
         setTargetProgress(progress);
+
+        // Streak calculation: distinct reading dates, walk back from today/yesterday
+        const allLogRows = await db
+          .select()
+          .from(reading_logs)
+          .innerJoin(user_books, eq(reading_logs.user_book_id, user_books.id))
+          .where(eq(user_books.user_id, currentUserId));
+
+        const dateSet = new Set<string>(allLogRows.map((l: any) => l.reading_logs.date));
+
+        const todayStr = now.toISOString().split('T')[0];
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        // Start from today if logged today, else yesterday if logged yesterday, else streak is 0
+        let cursor = new Date(now);
+        let streak = 0;
+        if (dateSet.has(todayStr)) {
+          streak = 1;
+          cursor.setDate(cursor.getDate() - 1);
+        } else if (dateSet.has(yesterdayStr)) {
+          streak = 1;
+          cursor = new Date(yesterday);
+          cursor.setDate(cursor.getDate() - 1);
+        } else {
+          setCurrentStreak(0);
+          return;
+        }
+
+        // Walk back day-by-day while dates exist
+        while (dateSet.has(cursor.toISOString().split('T')[0])) {
+          streak++;
+          cursor.setDate(cursor.getDate() - 1);
+        }
+
+        setCurrentStreak(streak);
       })();
     }, [period, currentUserId])
   );
@@ -188,8 +226,8 @@ export default function InsightsScreen() {
             <Text style={styles.statLabel}>Pages</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{daysWithReading}</Text>
-            <Text style={styles.statLabel}>Days</Text>
+            <Text style={styles.statValue}>{currentStreak}</Text>
+            <Text style={styles.statLabel}>Day streak</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{avgPerDay}</Text>
