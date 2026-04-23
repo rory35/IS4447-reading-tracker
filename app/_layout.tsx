@@ -1,11 +1,10 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { createContext, useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { eq } from 'drizzle-orm';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { seedDatabaseIfEmpty } from '../db/seed';
 import { db } from '@/db/client';
 import { user_books, books, categories } from '@/db/schema';
@@ -50,7 +49,6 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const router = useRouter();
   const segments = useSegments();
 
@@ -86,7 +84,6 @@ export default function RootLayout() {
     setCategoryRows([]);
   };
 
-  // On boot: seed DB, read session
   useEffect(() => {
     (async () => {
       await seedDatabaseIfEmpty();
@@ -96,7 +93,6 @@ export default function RootLayout() {
     })();
   }, []);
 
-  // Reload data whenever the user changes
   useEffect(() => {
     if (currentUserId !== null) {
       refreshBooks();
@@ -104,7 +100,6 @@ export default function RootLayout() {
     }
   }, [currentUserId]);
 
-  // Auth guard: redirect to login if no session, or out of auth screens if logged in
   useEffect(() => {
     if (!bootstrapped) return;
     const inAuthGroup = segments[0] === '(auth)';
@@ -127,7 +122,7 @@ export default function RootLayout() {
         refreshCategories,
       }}
     >
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />

@@ -5,6 +5,9 @@ import { useFocusEffect, useRouter } from 'expo-router';
 
 import { AppContext } from './_layout';
 import PrimaryButton from '@/components/ui/primary-button';
+import { Colors } from '@/constants/theme';
+
+const C = Colors.light;
 
 export default function CategoriesScreen() {
   const router = useRouter();
@@ -53,14 +56,20 @@ export default function CategoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16 },
+  container: { flex: 1, padding: 16, backgroundColor: C.background },
+  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
   list: { marginTop: 12 },
-  empty: { textAlign: 'center', marginTop: 40, color: '#666' },
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  empty: { textAlign: 'center', marginTop: 40, color: C.textMuted },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: C.border,
+  },
   pressed: { opacity: 0.6 },
   badge: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   badgeText: { fontSize: 20 },
-  name: { fontSize: 16, flex: 1 },
-  chevron: { fontSize: 20, color: '#999' },
+  name: { fontSize: 16, flex: 1, color: C.text },
+  chevron: { fontSize: 20, color: C.textLight },
 });

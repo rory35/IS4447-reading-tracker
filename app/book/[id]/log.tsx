@@ -7,6 +7,9 @@ import { db } from '@/db/client';
 import { reading_logs } from '@/db/schema';
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
+import { Colors } from '@/constants/theme';
+
+const C = Colors.light;
 
 export default function LogReadingScreen() {
   const { id } = useLocalSearchParams();
@@ -84,9 +87,9 @@ export default function LogReadingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: C.background },
   content: { padding: 16 },
-  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
+  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: C.text },
   textArea: { minHeight: 80, textAlignVertical: 'top' },
   buttonRow: { marginTop: 12 },
 });

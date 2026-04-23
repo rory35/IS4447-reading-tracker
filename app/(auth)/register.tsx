@@ -10,6 +10,9 @@ import { users, categories } from '@/db/schema';
 import { hashPassword, saveSession } from '../../lib/auth';
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
+import { Colors } from '@/constants/theme';
+
+const C = Colors.light;
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -47,7 +50,6 @@ export default function RegisterScreen() {
         password_hash: hash,
       }).returning();
 
-      // Seed default categories for the new user
       await db.insert(categories).values([
         { name: 'Fiction',     colour: '#E63946', icon: '📖', user_id: newUser.id },
         { name: 'Non-Fiction', colour: '#2A9D8F', icon: '📚', user_id: newUser.id },
@@ -57,7 +59,6 @@ export default function RegisterScreen() {
 
       await saveSession(newUser.id);
       setCurrentUserId(newUser.id);
-      // Auth guard in _layout redirects to /(tabs)
     } catch (e: any) {
       Alert.alert('Error', e.message ?? 'Could not create account.');
       setSubmitting(false);
@@ -119,10 +120,10 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: C.background },
   content: { padding: 16 },
-  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 4 },
-  subheading: { fontSize: 14, color: '#666', marginBottom: 16 },
+  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 4, color: C.text },
+  subheading: { fontSize: 14, color: C.textMuted, marginBottom: 16 },
   buttonRow: { marginTop: 12 },
-  error: { color: '#E63946', marginTop: 8, fontSize: 13 },
+  error: { color: C.danger, marginTop: 8, fontSize: 13 },
 });

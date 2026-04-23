@@ -8,6 +8,9 @@ import { AppContext } from '../_layout';
 import { db } from '@/db/client';
 import { user_books, books, categories, reading_logs } from '@/db/schema';
 import PrimaryButton from '@/components/ui/primary-button';
+import { Colors } from '@/constants/theme';
+
+const C = Colors.light;
 
 export default function BookDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -66,7 +69,7 @@ export default function BookDetailScreen() {
   if (!book) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Loading...</Text>
+        <Text style={styles.loading}>Loading...</Text>
       </SafeAreaView>
     );
   }
@@ -127,19 +130,20 @@ export default function BookDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold' },
-  author: { fontSize: 16, color: '#666', marginBottom: 12 },
+  container: { flex: 1, padding: 16, backgroundColor: C.background },
+  loading: { color: C.textMuted },
+  title: { fontSize: 24, fontWeight: 'bold', color: C.text },
+  author: { fontSize: 16, color: C.textMuted, marginBottom: 12 },
   badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginBottom: 16 },
-  badgeText: { color: '#fff', fontWeight: '600' },
-  progress: { fontSize: 16, marginBottom: 12 },
+  badgeText: { color: C.textOnPrimary, fontWeight: '600' },
+  progress: { fontSize: 16, marginBottom: 12, color: C.text },
   row: { marginBottom: 12 },
   actions: { flexDirection: 'row', gap: 8, marginBottom: 20 },
   actionItem: { flex: 1 },
-  heading: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
-  empty: { color: '#666', marginTop: 12 },
-  logRow: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  date: { fontWeight: '600' },
-  pages: { color: '#444', marginTop: 2 },
-  notes: { color: '#666', fontStyle: 'italic', marginTop: 2 },
+  heading: { fontSize: 18, fontWeight: '600', marginBottom: 8, color: C.text },
+  empty: { color: C.textMuted, marginTop: 12 },
+  logRow: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border },
+  date: { fontWeight: '600', color: C.text },
+  pages: { color: C.textMuted, marginTop: 2 },
+  notes: { color: C.textMuted, fontStyle: 'italic', marginTop: 2 },
 });

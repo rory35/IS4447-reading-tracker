@@ -5,6 +5,9 @@ import { useFocusEffect, useRouter } from 'expo-router';
 
 import { AppContext } from '../_layout';
 import PrimaryButton from '@/components/ui/primary-button';
+import { Colors } from '@/constants/theme';
+
+const C = Colors.light;
 
 export default function BooksScreen() {
   const router = useRouter();
@@ -49,6 +52,7 @@ export default function BooksScreen() {
         value={search}
         onChangeText={setSearch}
         placeholder="Search by title or author"
+        placeholderTextColor={C.textLight}
         accessibilityLabel="Search books"
       />
 
@@ -131,24 +135,38 @@ export default function BooksScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16 },
-  search: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10, fontSize: 16, marginTop: 12 },
+  container: { flex: 1, padding: 16, backgroundColor: C.background },
+  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
+  search: {
+    borderWidth: 1,
+    borderColor: C.borderStrong,
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 16,
+    marginTop: 12,
+    color: C.text,
+  },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   filterChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, opacity: 0.55 },
   allChip: { backgroundColor: '#444' },
-  filterChipSelected: { opacity: 1, borderWidth: 2, borderColor: '#000' },
-  filterText: { color: '#fff', fontWeight: '600', fontSize: 13 },
+  filterChipSelected: { opacity: 1, borderWidth: 2, borderColor: C.text },
+  filterText: { color: C.textOnPrimary, fontWeight: '600', fontSize: 13 },
   reset: { marginTop: 8, alignSelf: 'flex-start' },
-  resetText: { color: '#0F766E', fontWeight: '600' },
+  resetText: { color: C.primary, fontWeight: '600' },
   list: { marginTop: 12 },
-  empty: { textAlign: 'center', marginTop: 40, color: '#666' },
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  empty: { textAlign: 'center', marginTop: 40, color: C.textMuted },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: C.border,
+  },
   pressed: { opacity: 0.6 },
   badge: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   badgeText: { fontSize: 20 },
   info: { flex: 1 },
-  title: { fontSize: 16, fontWeight: '600' },
-  author: { fontSize: 14, color: '#666', marginTop: 2 },
-  category: { fontSize: 12, color: '#999', marginTop: 2 },
+  title: { fontSize: 16, fontWeight: '600', color: C.text },
+  author: { fontSize: 14, color: C.textMuted, marginTop: 2 },
+  category: { fontSize: 12, color: C.textLight, marginTop: 2 },
 });

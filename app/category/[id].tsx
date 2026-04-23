@@ -9,13 +9,9 @@ import { db } from '@/db/client';
 import { categories, user_books } from '@/db/schema';
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
+import { Colors, CategoryColours, CategoryIcons } from '@/constants/theme';
 
-const COLOUR_OPTIONS = [
-  '#E63946', '#F4A261', '#E9C46A', '#2A9D8F',
-  '#457B9D', '#6D597A', '#B5838D', '#264653',
-];
-
-const ICON_OPTIONS = ['📖', '📚', '🚀', '👤', '💡', '🎭', '🔬', '🗺️', '❤️', '⚔️'];
+const C = Colors.light;
 
 export default function EditCategoryScreen() {
   const { id } = useLocalSearchParams();
@@ -23,8 +19,8 @@ export default function EditCategoryScreen() {
   const { refreshCategories, refreshBooks } = useContext(AppContext);
 
   const [name, setName] = useState('');
-  const [colour, setColour] = useState(COLOUR_OPTIONS[0]);
-  const [icon, setIcon] = useState(ICON_OPTIONS[0]);
+  const [colour, setColour] = useState(CategoryColours[0]);
+  const [icon, setIcon] = useState(CategoryIcons[0]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -87,7 +83,7 @@ export default function EditCategoryScreen() {
   if (!loaded) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Loading...</Text>
+        <Text style={styles.loading}>Loading...</Text>
       </SafeAreaView>
     );
   }
@@ -101,7 +97,7 @@ export default function EditCategoryScreen() {
 
         <Text style={styles.label}>Colour</Text>
         <View style={styles.optionRow}>
-          {COLOUR_OPTIONS.map((c) => (
+          {CategoryColours.map((c) => (
             <Pressable
               key={c}
               accessibilityLabel={`Colour ${c}`}
@@ -114,7 +110,7 @@ export default function EditCategoryScreen() {
 
         <Text style={styles.label}>Icon</Text>
         <View style={styles.optionRow}>
-          {ICON_OPTIONS.map((i) => (
+          {CategoryIcons.map((i) => (
             <Pressable
               key={i}
               accessibilityLabel={`Icon ${i}`}
@@ -147,16 +143,26 @@ export default function EditCategoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: C.background },
   content: { padding: 16 },
-  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4 },
+  loading: { color: C.textMuted, padding: 16 },
+  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: C.text },
+  label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4, color: C.text },
   optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   colourSwatch: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: 'transparent' },
-  iconOption: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0f0f0', borderWidth: 2, borderColor: 'transparent' },
+  iconOption: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: C.surfaceAlt,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
   iconText: { fontSize: 20 },
-  selected: { borderColor: '#000' },
+  selected: { borderColor: C.text },
   preview: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, marginTop: 4 },
-  previewText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  previewText: { color: C.textOnPrimary, fontWeight: '600', fontSize: 16 },
   buttonRow: { marginTop: 12 },
 });

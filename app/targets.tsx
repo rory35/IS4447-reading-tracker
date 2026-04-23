@@ -8,6 +8,9 @@ import { AppContext } from './_layout';
 import { db } from '@/db/client';
 import { targets, reading_logs, user_books } from '@/db/schema';
 import PrimaryButton from '@/components/ui/primary-button';
+import { Colors } from '@/constants/theme';
+
+const C = Colors.light;
 
 type TargetRow = {
   id: number;
@@ -27,6 +30,7 @@ export default function TargetsScreen() {
   useFocusEffect(
     useCallback(() => {
       (async () => {
+        if (currentUserId === null) return;
         const allTargets = await db.select().from(targets).where(eq(targets.user_id, currentUserId));
 
         const now = new Date();
@@ -75,7 +79,7 @@ export default function TargetsScreen() {
 
         setRows(results);
       })();
-    }, [categories])
+    }, [categories, currentUserId])
   );
 
   return (
@@ -126,7 +130,7 @@ export default function TargetsScreen() {
                       styles.barFill,
                       {
                         width: `${percent}%`,
-                        backgroundColor: met ? '#2A9D8F' : (item.categoryColour ?? '#457B9D'),
+                        backgroundColor: met ? C.success : (item.categoryColour ?? C.primary),
                       },
                     ]}
                   />
@@ -147,19 +151,19 @@ export default function TargetsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16 },
+  container: { flex: 1, padding: 16, backgroundColor: C.background },
+  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
   list: { marginTop: 12 },
-  empty: { textAlign: 'center', marginTop: 40, color: '#666' },
-  card: { backgroundColor: '#f9f9f9', padding: 14, borderRadius: 12, marginBottom: 10 },
+  empty: { textAlign: 'center', marginTop: 40, color: C.textMuted },
+  card: { backgroundColor: C.surface, padding: 14, borderRadius: 12, marginBottom: 10 },
   pressed: { opacity: 0.7 },
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  cardTitle: { fontSize: 16, fontWeight: '600' },
+  cardTitle: { fontSize: 16, fontWeight: '600', color: C.text },
   status: { fontSize: 12, fontWeight: '700' },
-  statusMet: { color: '#2A9D8F' },
-  statusUnmet: { color: '#666' },
-  progressText: { color: '#444', marginBottom: 6 },
-  barBg: { height: 8, backgroundColor: '#eee', borderRadius: 4, overflow: 'hidden' },
+  statusMet: { color: C.success },
+  statusUnmet: { color: C.textMuted },
+  progressText: { color: C.textMuted, marginBottom: 6 },
+  barBg: { height: 8, backgroundColor: C.border, borderRadius: 4, overflow: 'hidden' },
   barFill: { height: 8, borderRadius: 4 },
-  remaining: { fontSize: 12, color: '#666', marginTop: 6 },
+  remaining: { fontSize: 12, color: C.textMuted, marginTop: 6 },
 });

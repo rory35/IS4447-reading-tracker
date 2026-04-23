@@ -1,4 +1,7 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
+import { Colors } from '@/constants/theme';
+
+const C = Colors.light;
 
 type Props = {
   label: string;
@@ -49,14 +52,14 @@ export default function PrimaryButton({
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
-    backgroundColor: '#0F766E',
+    backgroundColor: C.primary,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 11,
   },
   secondary: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#94A3B8',
+    backgroundColor: C.surfaceAlt,
+    borderColor: C.borderStrong,
     borderWidth: 1,
   },
   danger: {
@@ -75,12 +78,12 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   label: {
-    color: '#FFFFFF',
+    color: C.textOnPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
   secondaryLabel: {
-    color: '#0F172A',
+    color: C.text,
   },
   dangerLabel: {
     color: '#991B1B',
@@ -89,6 +92,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   disabledLabel: {
-    color: '#94A3B8',
+    color: C.disabled,
   },
 });

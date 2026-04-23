@@ -9,6 +9,9 @@ import { db } from '@/db/client';
 import { user_books, books } from '@/db/schema';
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
+import { Colors } from '@/constants/theme';
+
+const C = Colors.light;
 
 export default function EditBookScreen() {
   const { id } = useLocalSearchParams();
@@ -116,13 +119,13 @@ export default function EditBookScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: C.background },
   content: { padding: 16 },
-  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4 },
+  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: C.text },
+  label: { fontSize: 14, fontWeight: '600', marginTop: 12, marginBottom: 4, color: C.text },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   categoryChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, opacity: 0.6 },
-  categoryChipSelected: { opacity: 1, borderWidth: 2, borderColor: '#000' },
-  categoryText: { color: '#fff', fontWeight: '600' },
+  categoryChipSelected: { opacity: 1, borderWidth: 2, borderColor: C.text },
+  categoryText: { color: C.textOnPrimary, fontWeight: '600' },
   buttonRow: { marginTop: 12 },
 });

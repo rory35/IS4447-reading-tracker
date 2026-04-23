@@ -10,6 +10,9 @@ import { users } from '@/db/schema';
 import { verifyPassword, saveSession } from '../../lib/auth';
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
+import { Colors } from '@/constants/theme';
+
+const C = Colors.light;
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -44,7 +47,6 @@ export default function LoginScreen() {
 
       await saveSession(user.id);
       setCurrentUserId(user.id);
-      // Auth guard in _layout will redirect to /(tabs)
     } catch (e: any) {
       Alert.alert('Error', e.message ?? 'Could not log in.');
       setSubmitting(false);
@@ -89,18 +91,20 @@ export default function LoginScreen() {
           />
         </View>
 
-        <Text style={styles.hint}>Demo user: username <Text style={styles.bold}>demo</Text>, password <Text style={styles.bold}>demo</Text></Text>
+        <Text style={styles.hint}>
+          Demo user: username <Text style={styles.bold}>demo</Text>, password <Text style={styles.bold}>demo</Text>
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: C.background },
   content: { padding: 16 },
-  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 4 },
-  subheading: { fontSize: 14, color: '#666', marginBottom: 16 },
+  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 4, color: C.text },
+  subheading: { fontSize: 14, color: C.textMuted, marginBottom: 16 },
   buttonRow: { marginTop: 12 },
-  hint: { fontSize: 12, color: '#666', marginTop: 24, textAlign: 'center' },
-  bold: { fontWeight: '700' },
+  hint: { fontSize: 12, color: C.textMuted, marginTop: 24, textAlign: 'center' },
+  bold: { fontWeight: '700', color: C.text },
 });

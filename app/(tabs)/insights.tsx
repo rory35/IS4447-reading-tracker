@@ -8,6 +8,9 @@ import { eq, gte, and } from 'drizzle-orm';
 import { AppContext } from '../_layout';
 import { db } from '@/db/client';
 import { reading_logs, user_books, books, targets } from '@/db/schema';
+import { Colors } from '@/constants/theme';
+
+const C = Colors.light;
 
 type Period = 'week' | 'month' | 'year';
 
@@ -31,7 +34,6 @@ export default function InsightsScreen() {
         if (period === 'year') since.setDate(now.getDate() - 364);
         const sinceStr = since.toISOString().split('T')[0];
 
-        // Logs for the stats/pie
         const rows = await db
           .select()
           .from(reading_logs)
@@ -42,7 +44,6 @@ export default function InsightsScreen() {
           ));
         setLogs(rows);
 
-        // Books read: books where cumulative pages read >= total_pages
         const allUserBooks = await db
           .select()
           .from(user_books)
@@ -60,7 +61,6 @@ export default function InsightsScreen() {
         }
         setBooksReadCount(finished);
 
-        // Targets and their progress
         const allTargets = await db.select().from(targets).where(eq(targets.user_id, currentUserId));
         setUserTargets(allTargets);
 
@@ -95,12 +95,10 @@ export default function InsightsScreen() {
     }, [period, currentUserId])
   );
 
-  // Stats
   const totalPages = logs.reduce((sum: number, l: any) => sum + l.reading_logs.pages_read, 0);
   const daysWithReading = new Set(logs.map((l: any) => l.reading_logs.date)).size;
   const avgPerDay = daysWithReading > 0 ? Math.round(totalPages / daysWithReading) : 0;
 
-  // Pie data
   const pieData = categories.map((cat) => {
     const pages = logs
       .filter((l: any) => l.user_books.category_id === cat.id)
@@ -109,21 +107,20 @@ export default function InsightsScreen() {
       name: cat.name,
       pages,
       color: cat.colour,
-      legendFontColor: '#333',
+      legendFontColor: C.text,
       legendFontSize: 12,
     };
   }).filter(d => d.pages > 0);
 
   const screenWidth = Dimensions.get('window').width - 32;
   const chartConfig = {
-    backgroundGradientFrom: '#fff',
-    backgroundGradientTo: '#fff',
+    backgroundGradientFrom: C.background,
+    backgroundGradientTo: C.background,
     color: (opacity = 1) => `rgba(15, 118, 110, ${opacity})`,
-    labelColor: () => '#333',
+    labelColor: () => C.text,
     decimalPlaces: 0,
   };
 
-  // Target ahead/behind logic
   const now = new Date();
   const getTargetStatus = (t: any) => {
     const totalDays = t.period === 'weekly' ? 7 : 30;
@@ -213,10 +210,10 @@ export default function InsightsScreen() {
                   ? `${Math.abs(diff)} pages behind`
                   : 'On track';
             const statusColour = met
-              ? '#2A9D8F'
+              ? C.success
               : diff >= 0
-                ? '#2A9D8F'
-                : '#E63946';
+                ? C.success
+                : C.danger;
 
             return (
               <View key={t.id} style={styles.targetCard}>
@@ -235,7 +232,7 @@ export default function InsightsScreen() {
                       styles.barFill,
                       {
                         width: `${percent}%`,
-                        backgroundColor: met ? '#2A9D8F' : (cat?.colour ?? '#457B9D'),
+                        backgroundColor: met ? C.success : (cat?.colour ?? C.primary),
                       },
                     ]}
                   />
@@ -250,26 +247,26 @@ export default function InsightsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: C.background },
   content: { padding: 16 },
-  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16 },
+  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
   periodRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  periodChip: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: '#f0f0f0', alignItems: 'center' },
-  periodChipSelected: { backgroundColor: '#0F766E' },
-  periodText: { fontSize: 12, fontWeight: '600', color: '#333' },
-  periodTextSelected: { color: '#fff' },
+  periodChip: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: C.surfaceAlt, alignItems: 'center' },
+  periodChipSelected: { backgroundColor: C.primary },
+  periodText: { fontSize: 12, fontWeight: '600', color: C.text },
+  periodTextSelected: { color: C.textOnPrimary },
   statsRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  statCard: { flex: 1, backgroundColor: '#f5f5f5', padding: 10, borderRadius: 12, alignItems: 'center' },
-  statValue: { fontSize: 20, fontWeight: 'bold', color: '#0F766E' },
-  statLabel: { fontSize: 11, color: '#666', marginTop: 2, textAlign: 'center' },
-  sectionHeading: { fontSize: 18, fontWeight: '600', marginTop: 20, marginBottom: 8 },
+  statCard: { flex: 1, backgroundColor: C.surfaceAlt, padding: 10, borderRadius: 12, alignItems: 'center' },
+  statValue: { fontSize: 20, fontWeight: 'bold', color: C.primary },
+  statLabel: { fontSize: 11, color: C.textMuted, marginTop: 2, textAlign: 'center' },
+  sectionHeading: { fontSize: 18, fontWeight: '600', marginTop: 20, marginBottom: 8, color: C.text },
   chart: { borderRadius: 12 },
-  empty: { textAlign: 'center', color: '#666', padding: 20 },
-  targetCard: { backgroundColor: '#f9f9f9', padding: 14, borderRadius: 12, marginBottom: 10 },
+  empty: { textAlign: 'center', color: C.textMuted, padding: 20 },
+  targetCard: { backgroundColor: C.surface, padding: 14, borderRadius: 12, marginBottom: 10 },
   targetHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  targetTitle: { fontSize: 16, fontWeight: '600' },
+  targetTitle: { fontSize: 16, fontWeight: '600', color: C.text },
   targetStatus: { fontSize: 12, fontWeight: '700' },
-  targetProgressText: { color: '#444', marginBottom: 6, fontSize: 13 },
-  barBg: { height: 8, backgroundColor: '#eee', borderRadius: 4, overflow: 'hidden' },
+  targetProgressText: { color: C.textMuted, marginBottom: 6, fontSize: 13 },
+  barBg: { height: 8, backgroundColor: C.border, borderRadius: 4, overflow: 'hidden' },
   barFill: { height: 8, borderRadius: 4 },
 });

@@ -7,6 +7,9 @@ import { eq } from 'drizzle-orm';
 import { AppContext } from '../_layout';
 import { db } from '@/db/client';
 import { users, categories, user_books, reading_logs, targets } from '@/db/schema';
+import { Colors } from '@/constants/theme';
+
+const C = Colors.light;
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -45,7 +48,6 @@ export default function ProfileScreen() {
           onPress: async () => {
             if (currentUserId === null) return;
             try {
-              // Delete all user data in dependency order
               const userBookRows = await db.select().from(user_books).where(eq(user_books.user_id, currentUserId));
               for (const ub of userBookRows) {
                 await db.delete(reading_logs).where(eq(reading_logs.user_book_id, ub.id));
@@ -122,17 +124,31 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: C.background },
   content: { padding: 16 },
-  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16 },
-  userCard: { backgroundColor: '#f5f5f5', padding: 16, borderRadius: 12, marginBottom: 24 },
-  username: { fontSize: 20, fontWeight: '600' },
-  userMeta: { fontSize: 14, color: '#666', marginTop: 2 },
-  sectionHeading: { fontSize: 14, fontWeight: '600', color: '#666', textTransform: 'uppercase', marginTop: 16, marginBottom: 8 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  heading: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: C.text },
+  userCard: { backgroundColor: C.surfaceAlt, padding: 16, borderRadius: 12, marginBottom: 24 },
+  username: { fontSize: 20, fontWeight: '600', color: C.text },
+  userMeta: { fontSize: 14, color: C.textMuted, marginTop: 2 },
+  sectionHeading: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: C.textMuted,
+    textTransform: 'uppercase',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: C.border,
+  },
   pressed: { opacity: 0.6 },
-  rowLabel: { fontSize: 16 },
-  chevron: { fontSize: 20, color: '#999' },
+  rowLabel: { fontSize: 16, color: C.text },
+  chevron: { fontSize: 20, color: C.textLight },
   danger: { marginTop: 16 },
-  dangerText: { color: '#E63946' },
+  dangerText: { color: C.danger },
 });
