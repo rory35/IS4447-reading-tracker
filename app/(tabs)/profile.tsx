@@ -3,10 +3,12 @@ import { Alert, StyleSheet, Text, View, Pressable, ScrollView, Switch } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { eq } from 'drizzle-orm';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 import { AppContext } from '../_layout';
 import { db } from '@/db/client';
-import { users, categories, user_books, reading_logs, targets } from '@/db/schema';
+import { users, categories, user_books, reading_logs, targets, books } from '@/db/schema';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function ProfileScreen() {
@@ -14,6 +16,7 @@ export default function ProfileScreen() {
   const { currentUserId, logout } = useContext(AppContext);
   const { C, themeMode, toggleTheme } = useTheme();
   const [username, setUsername] = useState<string>('');
+  const [exporting, setExporting] = useState(false);
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: C.background },
@@ -63,6 +66,74 @@ export default function ProfileScreen() {
         },
       },
     ]);
+  };
+
+  const handleExportCsv = async () => {
+    if (currentUserId === null) return;
+    setExporting(true);
+    try {
+      const rows = await db
+        .select()
+        .from(reading_logs)
+        .innerJoin(user_books, eq(reading_logs.user_book_id, user_books.id))
+        .innerJoin(books, eq(user_books.book_id, books.id))
+        .innerJoin(categories, eq(user_books.category_id, categories.id))
+        .where(eq(user_books.user_id, currentUserId));
+
+      if (rows.length === 0) {
+        Alert.alert('Nothing to export', 'You have no reading logs yet.');
+        setExporting(false);
+        return;
+      }
+
+      // Build CSV string. Escape quotes by doubling them, wrap any field containing commas/quotes/newlines in quotes.
+      const esc = (v: any) => {
+        if (v === null || v === undefined) return '';
+        const s = String(v);
+        if (s.includes('"') || s.includes(',') || s.includes('\n')) {
+          return `"${s.replace(/"/g, '""')}"`;
+        }
+        return s;
+      };
+
+      const header = 'Date,Book,Author,Category,Pages Read,Notes';
+      const body = rows
+        .map((r: any) =>
+          [
+            esc(r.reading_logs.date),
+            esc(r.books.title),
+            esc(r.books.author),
+            esc(r.categories.name),
+            esc(r.reading_logs.pages_read),
+            esc(r.reading_logs.notes ?? ''),
+          ].join(',')
+        )
+        .join('\n');
+      const csv = `${header}\n${body}`;
+
+      const dateStamp = new Date().toISOString().split('T')[0];
+            const file = new FileSystem.File(FileSystem.Paths.cache, `pagemark-reading-${dateStamp}.csv`);
+            file.create();
+            file.write(csv);
+            const fileUri = file.uri;
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (!canShare) {
+        Alert.alert('Export saved', `File written to: ${fileUri}`);
+        setExporting(false);
+        return;
+      }
+
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'text/csv',
+        dialogTitle: 'Export reading data',
+        UTI: 'public.comma-separated-values-text',
+      });
+    } catch (e: any) {
+      Alert.alert('Error', e.message ?? 'Could not export data.');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleDeleteProfile = () => {
@@ -138,6 +209,21 @@ export default function ProfileScreen() {
             onValueChange={toggleTheme}
           />
         </View>
+
+        <Text style={styles.sectionHeading} accessibilityRole="header">Data</Text>
+
+        <Pressable
+          accessibilityLabel="Export reading logs as CSV"
+          accessibilityRole="button"
+          disabled={exporting}
+          style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+          onPress={handleExportCsv}
+        >
+          <Text style={styles.rowLabel}>
+            {exporting ? 'Preparing export...' : 'Export reading logs (CSV)'}
+          </Text>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
 
         <Text style={styles.sectionHeading} accessibilityRole="header">Account</Text>
 
